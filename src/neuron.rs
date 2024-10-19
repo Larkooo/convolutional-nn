@@ -20,18 +20,14 @@ impl<const W: usize> Neuron<W> {
         Self { weights, bias }
     }
 
-    pub fn activate(&self, inputs: &[f32]) -> f32 {
-        assert!(
-            inputs.len() <= W,
-            "A number of inputs is expected to be less than or equal to the number of weights"
-        );
+    pub fn activate(&self, inputs: &[f32; W]) -> f32 {
         let sum = inputs
             .iter()
             .zip(&self.weights)
             .map(|(input, weight)| input * weight)
             .sum::<f32>()
             + self.bias;
-        // ReLU activation function
-        sum.max(0.0)
+        // Leaky ReLU activation function
+        if sum > 0.0 { sum } else { 0.01 * sum }
     }
 }

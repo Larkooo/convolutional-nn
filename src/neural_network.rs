@@ -10,7 +10,7 @@ impl<const N: usize, const W: usize> Layer<N, W> {
         Self { neurons }
     }
 
-    pub fn forward(&self, inputs: &[f32]) -> [f32; N] {
+    pub fn forward(&self, inputs: &[f32; W]) -> [f32; N] {
         self.neurons.map(|neuron| neuron.activate(inputs))
     }
 }
@@ -38,20 +38,20 @@ impl<const I: usize, const H: usize, const O: usize> NeuralNetwork<I, H, O> {
         }
     }
 
-    pub fn forward(&self, inputs: [f32; I]) -> ([f32; H], [f32; O]) {
+    pub fn forward(&self, inputs: &[f32; I]) -> ([f32; H], [f32; O]) {
         let hidden_layer_inputs = self.hidden_layer.forward(&inputs);
         let outputs = self.output_layer.forward(&hidden_layer_inputs);
         (hidden_layer_inputs, outputs)
     }
 
-    pub fn backpropagate(&mut self, inputs: [f32; I], targets: [f32; O], learning_rate: f32) {
+    pub fn backpropagate(&mut self, inputs: &[f32; I], targets: &[f32; O], learning_rate: f32) {
         let (hidden_outputs, outputs) = self.forward(inputs);
         
         let output_errors = outputs.iter()
             .zip(targets.iter())
             .map(|(&output, &target)| {
                 let error_delta = target - output;
-                error_delta * if output > 0.0 { 1.0 } else { 0.0 } // ReLU derivative
+                error_delta * if output > 0.0 { 1.0 } else { 0.01 } // Leaky ReLU derivative
             })
             .collect::<Vec<_>>();
 
@@ -62,7 +62,7 @@ impl<const I: usize, const H: usize, const O: usize> NeuralNetwork<I, H, O> {
                     .zip(self.output_layer.neurons.iter())
                     .map(|(&error, neuron)| error * neuron.weights[i])
                     .sum();
-                error_sum * if hidden_output > 0.0 { 1.0 } else { 0.0 } // ReLU derivative
+                error_sum * if hidden_output > 0.0 { 1.0 } else { 0.01 } // Leaky ReLU derivative
             })
             .collect::<Vec<_>>();
 
@@ -87,13 +87,13 @@ impl<const I: usize, const H: usize, const O: usize> NeuralNetwork<I, H, O> {
         for epoch in 0..epochs {
             let mut total_loss = 0.0;
             for (inputs, targets) in dataset {
-                let (_, outputs) = self.forward(*inputs);
+                let (_, outputs) = self.forward(inputs);
                 let loss: f32 = outputs.iter()
                     .zip(targets.iter())
                     .map(|(&output, &target)| (target - output).powi(2))
                     .sum();
                 total_loss += loss;
-                self.backpropagate(*inputs, *targets, learning_rate);
+                self.backpropagate(inputs, targets, learning_rate);
             }
             println!("Epoch {}: Average Loss = {}", epoch, total_loss / dataset.len() as f32);
         }

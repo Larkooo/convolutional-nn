@@ -27,7 +27,7 @@ fn main() {
     // Test the network on a few samples
     for i in 0..5 {
         let (input, target) = &training_data[i];
-        let (_, output) = nn.forward(*input);
+        let (_, output) = nn.forward(input);
         let predicted_digit = output.iter().enumerate().max_by(|a, b| a.1.partial_cmp(b.1).unwrap()).unwrap().0;
         let actual_digit = target.iter().position(|&x| x == 1.0).unwrap();
         println!("Sample {}: Predicted {}, Actual {}", i, predicted_digit, actual_digit);
