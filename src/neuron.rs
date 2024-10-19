@@ -16,7 +16,7 @@ impl<const W: usize> Neuron<W> {
         for weight in weights.iter_mut() {
             *weight = random::<f32>();
         }
-        let bias = random::<f32>();
+        let bias = random::<f32>() - 0.5;
         Self { weights, bias }
     }
 
